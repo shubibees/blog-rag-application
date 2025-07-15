@@ -9,13 +9,13 @@ load_dotenv()
 
 app = FastAPI()
 
-# Add CORS middleware to allow all origins, methods, and headers
+    # Add CORS middleware to allow all origins, methods, and headers
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
 )
 
 app.include_router(search_router.router)
