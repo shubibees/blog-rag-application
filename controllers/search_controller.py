@@ -97,7 +97,7 @@ Your complete answer here
 
             # Use gpt-3.5-turbo for markdown response
             completion = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4.1-nano-2025-04-14",
                 messages=messages,  # type: ignore
                 temperature=0.7,
                 max_tokens=1000
@@ -128,7 +128,7 @@ Your complete answer here
                 {"role": "user", "content": user_content}
             ]
             completion = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4.1-nano-2025-04-14",
                 messages=messages,  # type: ignore
                 temperature=0.7,
                 max_tokens=256
@@ -164,7 +164,7 @@ Your complete answer here
                 {"role": "user", "content": user_prompt}
             ]
             completion = client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4.1-nano-2025-04-14",
                 messages=messages,  # type: ignore
                 temperature=0.7,
                 max_tokens=256

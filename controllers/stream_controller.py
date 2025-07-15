@@ -50,7 +50,7 @@ class StreamController:
                 {"role": "user", "content": f"Question: {query}\n\nContext: {context}"}
             ]
             stream = await client.chat.completions.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4.1-nano-2025-04-14",
                 messages=messages,
                 temperature=0.7,
                 max_tokens=1000,
