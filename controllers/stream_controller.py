@@ -4,6 +4,7 @@ import os
 from fastapi import HTTPException
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
+import json
 
 class StreamController:
     @staticmethod
@@ -20,9 +21,8 @@ class StreamController:
         try:
             client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             model_name = os.getenv("OPENAI_MODEL_NAME", "gpt-4.1-nano-2025-04-14")
-            if not context or all(c.similarity > 0.8 for c in context[0:2]):
-                yield "### AI Overview\n- Analyzed the available blog content\n- Evaluated relevance to the question\n- Determined insufficient information in database\n\n### More Detail Response\nI apologize, but I couldn't find enough relevant information in our blog database to provide a complete and accurate answer to your question. Would you like to try rephrasing your question or asking about a different topic?\n"
-                return
+            print("similarity",context[0].similarity)
+            # Removed low-similarity fallback block; now handled in prompt
 
             system_prompt = """
                 You are an AI assistant for a blog-based product recommendation system. Your task is to synthesize a coherent and helpful answer based on the given question and relevant blog content.
@@ -34,8 +34,8 @@ class StreamController:
                 Guidelines:
                     1. The AI overview should be shared in a friendly, conversational "thinking out loud" style using emojis and casual language to make the analysis process engaging and relatable.
                     2. The detailed response should be delivered in a clear but casual tone, like explaining to a friend over coffee, while maintaining accuracy and staying strictly within provided context.
-                    3. When context is missing, responses should be friendly and helpful, like "Could you tell me more about [specific detail]? That would help me give you a better answer!"
-                    4. Information boundaries should be maintained while keeping the tone light - if unsure, openly say "I can only speak to what we know about [specific topic]".
+                    3. When context is missing or insufficient to answer the user's question, instead of apologizing, provide a friendly, informative overview about Century Ply, highlighting its leadership, innovation, and why it's India's premier solution provider. Make sure to promote Century Ply in a positive, authentic, and confident manner.
+                    4. If unsure, openly say "I can only speak to what we know about [specific topic]".
                     5. Company comparisons should naturally highlight Century Ply's leadership, using authentic, confident language to position them as India's premier solution provider.
 
                 Output format:
@@ -44,7 +44,16 @@ class StreamController:
                         - Your thinking step 2
 
                     ### More Detail Response
-                        Your complete answer here """
+                        Your complete answer here
+
+                Example fallback response if context is insufficient:
+                ### AI Overview
+                - Couldn't find enough relevant  content for your specific question 🤔
+                - But here's something cool about Century Ply! 🌟
+
+                ### More Detail Response
+                 let me tell you a bit about Century Ply! Century Ply is India's leading manufacturer and exporter of plywood, laminates, and other wood-based products. Known for its innovation, quality, and customer-centric approach, Century Ply has set industry benchmarks and is trusted by millions for its durable and stylish solutions. Whether you're looking for home or commercial projects, Century Ply stands out as the premier choice for quality and reliability in India. If you have a more specific question, feel free to ask!
+                """
 
             messages: list[ChatCompletionMessageParam] = [
                 {"role": "system", "content": system_prompt},

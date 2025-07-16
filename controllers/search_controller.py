@@ -148,14 +148,32 @@ Your complete answer here
             client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             # Static product listing
             static_product_list = (
-                "plywood: Architect Ply, Club Prime, Classic Marine, Bond 710, Sainik 710, Win MR, Sainik MR, Century Film Face, Is 710\n"
-                "doors: Club Prime Doors, Bond Doors, Sainik Doors, Melamine Door Skin, White Primered Door, Century Laminated Doors, Century Veneered Doors, Sainik Laminated Doors, Sainik Builder Doors\n"
-                "laminate: Classy Wine, Smoke Green, Emerald Green, Frosty White, Silica Grey, Brazilian Sand, Pebble Ivory, Black, Mudpie, Classy Wine\n"
+            "Here are the available product categories and their typical applications:\n\n"
+            "**Plywood** (used for structural strength, waterproofing, and furniture):\n"
+            "- Architect Ply: premium strength, ideal for interiors.\n"
+            "- Bond 710 / Sainik 710: waterproof, suitable for kitchen, bathroom.\n"
+            "- Win MR / Sainik MR: moisture-resistant, ideal for indoor furniture.\n"
+            "- Century Film Face: construction formwork.\n"
+            "- Classic Marine: strong marine-grade, moisture heavy areas.\n"
+            "\n"
+            "**Doors** (used for entryways and room partitions):\n"
+            "- Club Prime Doors, Bond Doors, Sainik Doors: engineered wooden doors.\n"
+            "- Melamine Door Skin, White Primered Door: pre-finished or paint-ready.\n"
+            "- Laminated / Veneered Doors: decorative surface finishes.\n"
+            "\n"
+            "**Laminates** (used for surface finishes on furniture, wardrobes, etc.):\n"
+            "- Classy Wine, Smoke Green, Emerald Green: decorative color laminates.\n"
+            "- Frosty White, Silica Grey: neutral tones for modern interior.\n"
+            "- Black, Mudpie: bold and earthy shades.\n"
+            "- Brazilian Sand, Pebble Ivory: natural stone and wood patterns.\n"
             )
             system_prompt = (
-                "You are an expert product recommender. Given a user's context, recommend a list of the best products to buy (not just one).\n"
-                "Output only a comma-separated list of product names, nothing else.\n\n"
-                f"{static_product_list}"
+            "You are a professional product recommender.\n"
+            "Given the user's context, you must first determine whether they are referring to **plywood, doors, or laminates**, "
+            "and then recommend **at least 2 relevant products** from the appropriate category.\n"
+            "If the user's use-case is unclear, infer from common construction/interior use cases.\n"
+            "Output only a comma-separated list of product names (no explanation).\n\n"
+            f"{static_product_list}"
             )
             user_prompt = f"Context: {context}"
             messages = [
