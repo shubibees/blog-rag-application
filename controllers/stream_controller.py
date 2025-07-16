@@ -19,6 +19,7 @@ class StreamController:
     async def openai_stream(query: str, context):
         try:
             client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            model_name = os.getenv("OPENAI_MODEL_NAME", "gpt-4.1-nano-2025-04-14")
             if not context or all(c.similarity > 0.8 for c in context[0:2]):
                 yield "### AI Overview\n- Analyzed the available blog content\n- Evaluated relevance to the question\n- Determined insufficient information in database\n\n### More Detail Response\nI apologize, but I couldn't find enough relevant information in our blog database to provide a complete and accurate answer to your question. Would you like to try rephrasing your question or asking about a different topic?\n"
                 return
@@ -50,7 +51,7 @@ class StreamController:
                 {"role": "user", "content": f"Question: {query}\n\nContext: {context}"}
             ]
             stream = await client.chat.completions.create(
-                model="gpt-4.1-nano-2025-04-14",
+                model=model_name,
                 messages=messages,
                 temperature=0.7,
                 max_tokens=1000,
