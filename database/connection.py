@@ -32,8 +32,13 @@ async def ensure_embedding_tables_exist(conn):
 async def get_db() -> AsyncGenerator[asyncpg.Connection, None]:
     try:
         load_dotenv()
-        conn_str = os.getenv("DATABASE_URL")
-        conn = await asyncpg.connect(conn_str)
+        conn = await asyncpg.connect(
+            host=os.getenv("DB_HOST", "localhost"),
+            database=os.getenv("DB_NAME", "your_database_name"),
+            user=os.getenv("DB_USER", "your_username"),
+            password=os.getenv("DB_PASSWORD", "your_password"),
+            port=int(os.getenv("DB_PORT", 5432))
+        )
         logger.info("Database connection established")
         await ensure_embedding_tables_exist(conn)
         yield conn
