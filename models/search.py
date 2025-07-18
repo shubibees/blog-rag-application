@@ -6,6 +6,16 @@ class Query(BaseModel):
     query: str = Field(..., min_length=3)
 
 
+class EmbeddingsResponse(BaseModel):
+    embedding_status: str
+
+class Blog(BaseModel):
+    blog_author:str
+    title: str
+    content: str
+
+class Product(BaseModel):
+    name:str
 class Context(BaseModel):
     documentid: str
     content: str
