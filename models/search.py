@@ -10,12 +10,26 @@ class EmbeddingsResponse(BaseModel):
     embedding_status: str
 
 class Blog(BaseModel):
+    documentid: str
     blog_author:str
     title: str
     content: str
 
+class Category(BaseModel):
+    id: int
+    name: str
+
 class Product(BaseModel):
-    name:str
+    documentid: str
+    name: str
+    short_description: str
+    description: str
+    alias: str
+    model_code: str
+    specs: str
+    colors: List[str]
+    categories: List[Category]
+
 class Context(BaseModel):
     documentid: str
     content: str
