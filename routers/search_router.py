@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 import asyncpg
 from models.search import *
 from controllers.search_controller import * 
+from controllers.stream_controller import StreamController
 from controllers.embedding_generator import *
 from database.connection import get_db
 from fastapi.responses import StreamingResponse
@@ -63,13 +64,13 @@ async def recommend_product_blog(
     return RecommendProductBlogResponse(**result)
 
 
-@router.post("/blog/embeddings",response_class=EmbeddingsResponse)
+@router.get("/blog/embeddings",response_model=EmbeddingsResponse)
 async def generate_embeddings_for_blog(
     db: asyncpg.Connection = Depends(get_db)
 ):
     return await create_embedding_of_blog_in_database(db)
 
-@router.post("/product/embeddings",response_class=EmbeddingsResponse)
+@router.get("/product/embeddings",response_model=EmbeddingsResponse)
 async def generate_embeddings_for_product(
     db: asyncpg.Connection = Depends(get_db)
 ):
