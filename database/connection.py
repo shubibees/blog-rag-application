@@ -8,12 +8,34 @@ from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
 
+async def ensure_embedding_tables_exist(conn):
+    # Create blog_embedding_oai_small table if it does not exist
+    await conn.execute('''
+        CREATE TABLE IF NOT EXISTS blog_embedding_oai_small (
+            documentid TEXT PRIMARY KEY,
+            title TEXT,
+            embeddingContext TEXT,
+            embedding VECTOR(1536)
+        )
+    ''')
+    # Create product_embedding_oai_small table if it does not exist
+    await conn.execute('''
+        CREATE TABLE IF NOT EXISTS product_embedding_oai_small (
+            documentid TEXT PRIMARY KEY,
+            name TEXT,
+            alias TEXT,
+            embeddingContext TEXT,
+            embedding VECTOR(1536)
+        )
+    ''')
+
 async def get_db() -> AsyncGenerator[asyncpg.Connection, None]:
     try:
         load_dotenv()
         conn_str = os.getenv("DATABASE_URL")
         conn = await asyncpg.connect(conn_str)
         logger.info("Database connection established")
+        await ensure_embedding_tables_exist(conn)
         yield conn
     except asyncpg.PostgresError as e:
         logger.error(f"Database connection error: {str(e)}")

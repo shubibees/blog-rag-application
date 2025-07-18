@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 import asyncpg
 from models.search import *
-from controllers.search_controller import SearchController
-from controllers.stream_controller import StreamController
+from controllers.search_controller import * 
+from controllers.embedding_generator import *
 from database.connection import get_db
 from fastapi.responses import StreamingResponse
 from database.queries import perform_similarity_search
@@ -61,5 +61,20 @@ async def recommend_product_blog(
 ):
     result = await SearchController.recommend_product_blog(request.query, request.context, db)
     return RecommendProductBlogResponse(**result)
+
+
+@router.post("/blog/embeddings",response_class=EmbeddingsResponse)
+async def generate_embeddings_for_blog(
+    db: asyncpg.Connection = Depends(get_db)
+):
+    return await create_embedding_of_blog_in_database(db)
+
+@router.post("/product/embeddings",response_class=EmbeddingsResponse)
+async def generate_embeddings_for_product(
+    db: asyncpg.Connection = Depends(get_db)
+):
+    return await create_embedding_of_product_in_database(db)
+
+
 
 
