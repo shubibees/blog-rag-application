@@ -28,22 +28,28 @@ async def create_embedding_of_blog_in_database(db):
 async def create_embedding_of_product_in_database(db):
     products = await get_all_products(db)
     for product in products:
-        print("documentid",product.documentid,"embeding generated")
+        print("documentid", product.documentid, "embeding generated")
         # Parse colors
-        try:
-            color_list = json.loads(product.colors)
-            color_codes = ", ".join(color_list)
-        except Exception as e:
-            logging.warning(f"Failed to parse colors for product {product.documentid}: {e}")
-            color_codes = product.colors  # fallback to raw string
+        if isinstance(product.colors, str):
+            try:
+                color_list = json.loads(product.colors)
+            except Exception as e:
+                logging.warning(f"Failed to parse colors for product {product.documentid}: {e}")
+                color_list = []
+        else:
+            color_list = product.colors if product.colors is not None else []
+        color_codes = ", ".join(color_list)
 
         # Parse categories
-        try:
-            category_list = json.loads(product.categories)
-            category_names = ", ".join([cat["name"] for cat in category_list])
-        except Exception as e:
-            logging.warning(f"Failed to parse categories for product {product.documentid}: {e}")
-            category_names = product.categories  # fallback to raw string
+        if isinstance(product.categories, str):
+            try:
+                category_list = json.loads(product.categories)
+            except Exception as e:
+                logging.warning(f"Failed to parse categories for product {product.documentid}: {e}")
+                category_list = []
+        else:
+            category_list = product.categories if product.categories is not None else []
+        category_names = ", ".join([cat["name"] if isinstance(cat, dict) and "name" in cat else str(cat) for cat in category_list])
 
         embedding_context = (
             f"Product Name: {product.name}\n"
@@ -56,8 +62,10 @@ async def create_embedding_of_product_in_database(db):
             f"Product Categories: {category_names}"
         )
         embedding = await generate_embedding(embedding_context)
+        # Convert embedding to string if needed for DB compatibility
+        embedding_str = str(embedding)
         await db.execute(
             "INSERT INTO product_embedding_oai_small (documentid, name, alias, embeddingContext, embedding) VALUES ($1, $2, $3, $4, $5)",
-            product.documentid, product.name, product.alias, embedding_context, embedding
+            product.documentid, product.name, product.alias, embedding_context, embedding_str
         )
     return {"embedding_status": "success"}
