@@ -35,6 +35,7 @@ async def get_all_blogs(conn: asyncpg.Connection) -> List[Blog]:
 async def get_all_products(conn: asyncpg.Connection) -> List[Product]:
     rows = await conn.fetch("""SELECT
         p.id,
+        p.document_id,
         p.name,
         p.short_description,
         p.description,

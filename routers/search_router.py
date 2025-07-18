@@ -76,6 +76,10 @@ async def generate_embeddings_for_product(
 ):
     return await create_embedding_of_product_in_database(db)
 
-
+@router.get("/connection/test")
+async def test_connection(
+    db: asyncpg.Connection = Depends(get_db)
+):
+    return await db.fetch("SELECT * FROM blogs where published_at is not null")
 
 
