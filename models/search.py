@@ -21,14 +21,14 @@ class Category(BaseModel):
 
 class Product(BaseModel):
     documentid: str
-    name: str
-    short_description: str
-    description: str
-    alias: str
-    model_code: str
-    specs: str
-    colors: List[str]
-    categories: List[Category]
+    name: str = None
+    short_description: str = None
+    description: str = None
+    alias: str = None
+    model_code: str = None
+    specs: str = None
+    colors: List[str] = None
+    categories: List[Category] = None
 
 class Context(BaseModel):
     documentid: str
