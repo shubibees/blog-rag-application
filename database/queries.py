@@ -1,5 +1,5 @@
 from typing import List
-
+import json
 import asyncpg
 from models.search import Context, Blog, Product
 
@@ -79,8 +79,12 @@ async def get_all_products(conn: asyncpg.Connection) -> List[Product]:
         p.id
     ORDER BY
         p.id ASC""")
-    return [
-        Product(
+    products = []
+    for row in rows:
+        # Parse colors and categories from JSON string to Python list
+        colors = json.loads(row['colors']) if isinstance(row['colors'], str) else row['colors']
+        categories = json.loads(row['categories']) if isinstance(row['categories'], str) else row['categories']
+        products.append(Product(
             documentid=row['document_id'],
             name=row['name'],
             short_description=row['short_description'],
@@ -88,7 +92,7 @@ async def get_all_products(conn: asyncpg.Connection) -> List[Product]:
             alias=row['alias'],
             model_code=row['model_code'],
             specs=row['specs'],
-            colors=row['colors'],
-            categories=row['categories']
-        ) for row in rows
-    ]
+            colors=colors,
+            categories=categories
+        ))
+    return products
