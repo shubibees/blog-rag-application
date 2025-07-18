@@ -18,6 +18,7 @@ async def create_embedding_of_blog_in_database(db):
     blogs = await get_all_blogs(db)
     # let create a loop to generate embeddings for each blog and store in the database
     for blog in blogs:
+        print("documentid",blog.documentid,"embeding generated")
         embedding_context = f"Blog Author: {blog.blog_author}\nBlog Title: {blog.title}\nBlog Content: {blog.content}"
         embedding = await generate_embedding(embedding_context)
         await db.execute("INSERT INTO blog_embedding_oai_small (documentid,title,embeddingContext, embedding) VALUES ($1, $2, $3, $4)", blog.documentid, blog.title, embedding_context, embedding)
@@ -27,6 +28,7 @@ async def create_embedding_of_blog_in_database(db):
 async def create_embedding_of_product_in_database(db):
     products = await get_all_products(db)
     for product in products:
+        print("documentid",product.documentid,"embeding generated")
         # Parse colors
         try:
             color_list = json.loads(product.colors)
