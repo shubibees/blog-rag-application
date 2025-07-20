@@ -14,7 +14,7 @@ async def ensure_embedding_tables_exist(conn):
         CREATE TABLE IF NOT EXISTS blog_embedding_oai_small (
             documentid TEXT PRIMARY KEY,
             title TEXT,
-            embeddingContext TEXT,
+            content TEXT,
             embedding VECTOR(1536)
         )
     ''')

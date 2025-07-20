@@ -13,26 +13,45 @@ async def generate_embedding(query: str) -> List[float]:
    )
    return response.data[0].embedding
 
+
+BATCH_SIZE = 10
+def truncate_to_n_words(text, n):
+    if not text:
+        return ""
+    words = text.split()
+    return " ".join(words[:n])
+
 async def create_embedding_of_blog_in_database(db):
-    #delete all the data
+    #delete the table data 
     await db.execute("DELETE FROM blog_embedding_oai_small")
-    # get all blogs from database
+    #new embedding
     blogs = await get_all_blogs(db)
-    # let create a loop to generate embeddings for each blog and store in the database
-    for blog in blogs:
-        print("documentid",blog.documentid,"embeding generated")
-        embedding_context = f"Blog Author: {blog.blog_author}\nBlog Title: {blog.title}\nBlog Content: {blog.content}"
-        print("embedding_context",embedding_context[100:130])
-        embedding = await generate_embedding(embedding_context)
-        print("embedding",len(embedding),type(embedding),embedding[:5])
-        embedding_str = f"[{','.join(map(str,embedding))}]"
-        await db.execute("INSERT INTO blog_embedding_oai_small (documentid,title,embeddingContext, embedding) VALUES ($1, $2, $3, $4::vector)", blog.documentid, blog.title, embedding_context, embedding_str)
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    for i in range(0, len(blogs), BATCH_SIZE):
+        batch = blogs[i:i+BATCH_SIZE]
+        embedding_contexts = [
+            f"Blog Author: {blog.blog_author or ''}\nBlog Title: {blog.title or ''}\nBlog Content: {truncate_to_n_words(blog.content,400)}"
+            for blog in batch
+        ]
+        response = client.embeddings.create(
+            input=embedding_contexts,
+            model=os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
+        )
+        embeddings = [item.embedding for item in response.data]
+        print("embedding length",len(embeddings))
+        for blog, embedding, context in zip(batch, embeddings, embedding_contexts):
+            embedding_str = str(embedding)
+            await db.execute(
+                "INSERT INTO blog_embedding_oai_small (documentid,title,content, embedding) VALUES ($1, $2, $3, $4::vector)",
+                blog.documentid, blog.title, context, embedding_str
+            )
     return {"embedding_status": "success"}
+
 
 
 async def create_embedding_of_product_in_database(db):
     #delete all the data
-    await db.execute("DELETE FROM product_embedding_oai_small")
+    #await db.execute("DELETE FROM product_embedding_oai_small")
     #get all the product from database
     products = await get_all_products(db)
     for product in products:

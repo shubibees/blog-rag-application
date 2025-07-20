@@ -11,9 +11,9 @@ class EmbeddingsResponse(BaseModel):
 
 class Blog(BaseModel):
     documentid: str
-    blog_author:str
-    title: str
-    content: str
+    blog_author:Optional[str] = ""
+    title: Optional[str] = ""
+    content: Optional[str] = ""
 
 class Category(BaseModel):
     id: int
