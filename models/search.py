@@ -75,3 +75,12 @@ class RecommendProductBlogResponse(BaseModel):
     recommended_products: list[str]
     blog_content: List[BlogContent]
 
+
+class ProductSimilarityResult(BaseModel):
+    documentid: str
+    name: str
+    alias: str
+    similarity: float
+
+
+

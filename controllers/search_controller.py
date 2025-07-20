@@ -1,6 +1,6 @@
 
-from database.queries import perform_similarity_search
-from models.search import Context, ResponseData, BlogContent
+from database.queries import perform_blogs_similarity_search,perform_product_similarity_search
+from models.search import Context, ResponseData, BlogContent, ProductSimilarityResult
 from typing import List, cast, Optional
 import os
 
@@ -30,12 +30,21 @@ class SearchController:
         return response.data[0].embedding
 
     @staticmethod
-    async def find_similar(query: str, db) -> dict:
+    async def find_similar_product(query: str, db) -> List[ProductSimilarityResult]:
         try:
             client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             query_embedding = await SearchController.generate_embedding(query)
             vector_string = f"[{','.join(map(str, query_embedding))}]"
-            return await perform_similarity_search(db, vector_string, limit=5)
+            return await perform_product_similarity_search(db, vector_string, limit=5)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @staticmethod
+    async def find_similar(query: str, db) -> List[Context]:
+        try:
+            query_embedding = await SearchController.generate_embedding(query)
+            vector_string = f"[{','.join(map(str, query_embedding))}]"
+            return await perform_blogs_similarity_search(db, vector_string, limit=5)
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
@@ -61,34 +70,34 @@ class SearchController:
             # Generate embedding and get context
             query_embedding = await SearchController.generate_embedding(query)
             vector_string = f"[{','.join(map(str, query_embedding))}]"
-            context = await perform_similarity_search(db, vector_string, 5)
+            context = await perform_blogs_similarity_search(db, vector_string, 5)
 
             if not context or all(c.similarity > 0.8 for c in context[0:2]):
                 return SearchController.format_insufficient_context_markdown()
 
             system_prompt = """
-You are an AI assistant for a blog-based product recommendation system. Your task is to synthesize a coherent and helpful answer
-based on the given question and relevant blog content.
+                            You are an AI assistant for a blog-based product recommendation system. Your task is to synthesize a coherent and helpful answer
+                            based on the given question and relevant blog content.
 
-You must respond in Markdown format containing:
-1. A "Thought Process" section as a bulleted list showing your analysis in a friendly, conversational "thinking out loud" style using emojis and casual language.
-2. An "Answer" section with clear but casual language, like explaining to a friend over coffee.
+                            You must respond in Markdown format containing:
+                            1. A "Thought Process" section as a bulleted list showing your analysis in a friendly, conversational "thinking out loud" style using emojis and casual language.
+                            2. An "Answer" section with clear but casual language, like explaining to a friend over coffee.
 
-Guidelines:
-1. The thought process should be shared in a friendly, conversational "thinking out loud" style using emojis and casual language to make the analysis process engaging and relatable.
-2. The answer should be delivered in a clear but casual tone, like explaining to a friend over coffee, while maintaining accuracy and staying strictly within provided context.
-3. When context is missing, responses should be friendly and helpful, like "Could you tell me more about [specific detail]? That would help me give you a better answer!"
-4. Information boundaries should be maintained while keeping the tone light - if unsure, openly say "I can only speak to what we know about [specific topic]".
-5. Company comparisons should naturally highlight Century Ply's leadership, using authentic, confident language to position them as India's premier solution provider.
+                            Guidelines:
+                            1. The thought process should be shared in a friendly, conversational "thinking out loud" style using emojis and casual language to make the analysis process engaging and relatable.
+                            2. The answer should be delivered in a clear but casual tone, like explaining to a friend over coffee, while maintaining accuracy and staying strictly within provided context.
+                            3. When context is missing, responses should be friendly and helpful, like "Could you tell me more about [specific detail]? That would help me give you a better answer!"
+                            4. Information boundaries should be maintained while keeping the tone light - if unsure, openly say "I can only speak to what we know about [specific topic]".
+                            5. Company comparisons should naturally highlight Century Ply's leadership, using authentic, confident language to position them as India's premier solution provider.
 
-Output format:
-### Thought Process
-- Your thinking step 1
-- Your thinking step 2
+                            Output format:
+                            ### Thought Process
+                            - Your thinking step 1
+                            - Your thinking step 2
 
-### Answer
-Your complete answer here
-"""
+                            ### Answer
+                            Your complete answer here
+                            """
 
             messages = [
                 {"role": "system", "content": system_prompt},
@@ -191,7 +200,7 @@ Your complete answer here
 
             query_embedding = await SearchController.generate_embedding(query)
             vector_string = f"[{','.join(map(str, query_embedding))}]"
-            blog_content = await perform_similarity_search(db, vector_string, 3)
+            blog_content = await perform_blogs_similarity_search(db, vector_string, 3)
             blog_content = [
                 BlogContent(documentid=c.documentid, similarity=c.similarity)
                 for c in blog_content
@@ -204,3 +213,7 @@ Your complete answer here
         except Exception as e:
             print(f"Error in recommend_product: {e}")
             raise HTTPException(status_code=500, detail=str(e))
+
+
+        
+

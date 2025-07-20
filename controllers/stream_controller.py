@@ -1,4 +1,4 @@
-from database.queries import perform_similarity_search
+from database.queries import perform_blogs_similarity_search
 from models.search import Context
 import os
 from fastapi import HTTPException
