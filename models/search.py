@@ -78,8 +78,8 @@ class RecommendProductBlogResponse(BaseModel):
 
 class ProductSimilarityResult(BaseModel):
     documentid: str
-    name: str
-    alias: str
+    name: str=""
+    alias: str=""
     similarity: float
 
 
