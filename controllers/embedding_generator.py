@@ -23,7 +23,7 @@ def truncate_to_n_words(text, n):
 
 async def create_embedding_of_blog_in_database(db):
     #delete the table data 
-    await db.execute("DELETE FROM blog_embedding_oai_small")
+    #await db.execute("DELETE FROM blog_embedding_oai_small")
     #new embedding
     blogs = await get_all_blogs(db)
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
