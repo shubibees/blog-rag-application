@@ -33,12 +33,11 @@ class StreamController:
             system_prompt = f"""
                     You are an AI assistant for a blog-based product recommendation system. Your task is to synthesize a coherent and helpful answer based on the given question, relevant blog content, and recommended products.
 
-                    You must respond in Markdown format containing:
-                        1. A section titled 'Recommended Products' showing the most relevant products for the user's query (see below).
-                        2. A section titled 'AI Response' with a clear, casual, and helpful answer based on the blog context and the recommended products, like explaining to a friend over coffee.
+                    You must respond in Markdown format with a single section titled 'AI Response'.
 
                     Guidelines:
-                        - The 'Recommended Products' section should be a bullet list of product names. At the end, add: 'You can choose a product from the above recommendations.'
+                        - Naturally weave the recommended products ({', '.join([p.name for p in recommended_products]) if recommended_products else 'no products'}) into your answer, mentioning them by name as part of your explanation and recommendations.
+                        - Do NOT create a separate 'Recommended Products' section or bullet list. Instead, reference the products contextually within your response.
                         - The 'AI Response' should synthesize information from both the blog context and the recommended products.
                         - If context is missing or insufficient, provide a friendly, informative overview about Century Ply, highlighting its leadership, innovation, and why it's India's premier solution provider.
                         - If unsure, openly say "I can only speak to what we know about [specific topic]".
@@ -46,10 +45,7 @@ class StreamController:
 
                     Output format:
                     ### AI Response
-                    Your complete answer here
-
-                    ### Recommended Products
-                    {product_list}
+                    Your complete answer here, with recommended products mentioned naturally in the text.
                     """
 
             messages: list[ChatCompletionMessageParam] = [
