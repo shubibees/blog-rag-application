@@ -37,15 +37,16 @@ class StreamController:
 
                     Guidelines:
                         - Naturally weave the recommended products ({', '.join([p.name for p in recommended_products]) if recommended_products else 'no products'}) into your answer, mentioning them by name as part of your explanation and recommendations.
+                        - When mentioning a product, highlight its name by making it bold using Markdown (e.g., **Product Name**).
                         - Do NOT create a separate 'Recommended Products' section or bullet list. Instead, reference the products contextually within your response.
                         - The 'AI Response' should synthesize information from both the blog context and the recommended products.
                         - If context is missing or insufficient, provide a friendly, informative overview about Century Ply, highlighting its leadership, innovation, and why it's India's premier solution provider.
-                        - If unsure, openly say "I can only speak to what we know about [specific topic]".
+                        - If unsure, openly say \"I can only speak to what we know about [specific topic]\".
                         - Company comparisons should naturally highlight Century Ply's leadership, using authentic, confident language to position them as India's premier solution provider.
 
                     Output format:
                     ### AI Response
-                    Your complete answer here, with recommended products mentioned naturally in the text.
+                    Your complete answer here, with recommended products mentioned naturally in the text and product names bolded.
                     """
 
             messages: list[ChatCompletionMessageParam] = [
