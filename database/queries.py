@@ -94,10 +94,10 @@ async def perform_product_similarity_search(
         SELECT documentid, name, alias, embedding <=> $1::vector AS similarity
         FROM product_embedding_oai_small
         WHERE embedding <=> $1::vector < $2
-        LIMIT 5
         ORDER BY similarity ASC
+        LIMIT 5
     """, vector_string, max_similarity)
-    print("rows",rows)
+    print("rows", rows)
     return [
         ProductSimilarityResult(
             documentid=row['documentid'],
