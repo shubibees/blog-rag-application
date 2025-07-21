@@ -101,8 +101,8 @@ async def perform_product_similarity_search(
     return [
         ProductSimilarityResult(
             documentid=row['documentid'],
-            name=row['name'],
-            alias=row['alias'],
+            name=row['name'] if row['name'] else "",
+            alias=row['alias'] if row['alias'] else "",
             similarity=row['similarity']
         ) for row in rows
     ]
