@@ -37,7 +37,7 @@ class SearchController:
             client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             query_embedding = await SearchController.generate_embedding(query)
             vector_string = f"[{','.join(map(str, query_embedding))}]"
-            return await perform_product_similarity_search(db, vector_string, limit=5)
+            return await perform_product_similarity_search(db, vector_string, 0.33) # similarity score 0.33 is the threshold for similarity
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
