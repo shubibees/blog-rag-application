@@ -2,7 +2,7 @@ from openai import OpenAI
 import os
 import json
 
-def preprocess_query_with_openai(query: str) -> dict:
+async def preprocess_query_with_openai(query: str) -> dict:
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     prompt = (
         "Given the following user query, extract the color (if any) and the product category (if any). "
