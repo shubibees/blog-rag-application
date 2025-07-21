@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
 import json
-
+from controllers.search_controller import SearchController
 class StreamController:
     @staticmethod
     async def generate_embedding(query: str) -> list[float]:
@@ -17,43 +17,41 @@ class StreamController:
         return response.data[0].embedding
 
     @staticmethod
-    async def openai_stream(query: str, context):
+    async def openai_stream(query: str, context, db):
         try:
             client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             model_name = os.getenv("OPENAI_MODEL_NAME", "gpt-4.1-nano-2025-04-14")
-            print("similarity",context[0].similarity)
-            # Removed low-similarity fallback block; now handled in prompt
+            print("similarity", context[0].similarity)
+            # Get product recommendations
+            recommended_products = await SearchController.find_similar_product(query, db)
+            if recommended_products:
+                product_list = "\n".join([
+                    f"- {p.name}" for p in recommended_products
+                ]) + "\n\nYou can choose a product from the above recommendations."
+            else:
+                product_list = "_No similar products found for your query. Try rephrasing or asking about a different product!_"
 
-            system_prompt = """
-                You are an AI assistant for a blog-based product recommendation system. Your task is to synthesize a coherent and helpful answer based on the given question and relevant blog content.
+            system_prompt = f"""
+                    You are an AI assistant for a blog-based product recommendation system. Your task is to synthesize a coherent and helpful answer based on the given question, relevant blog content, and recommended products.
 
-                You must respond in Markdown format containing:
-                    1. An "AI Overview" section as a bulleted list showing your analysis in a friendly, conversational "thinking out loud" style using emojis and casual language.
-                    2. A "More Detail Response" section with clear but casual language, like explaining to a friend over coffee.
+                    You must respond in Markdown format containing:
+                        1. A section titled 'Recommended Products' showing the most relevant products for the user's query (see below).
+                        2. A section titled 'AI Response' with a clear, casual, and helpful answer based on the blog context and the recommended products, like explaining to a friend over coffee.
 
-                Guidelines:
-                    1. The AI overview should be shared in a friendly, conversational "thinking out loud" style using emojis and casual language to make the analysis process engaging and relatable.
-                    2. The detailed response should be delivered in a clear but casual tone, like explaining to a friend over coffee, while maintaining accuracy and staying strictly within provided context.
-                    3. When context is missing or insufficient to answer the user's question, instead of apologizing, provide a friendly, informative overview about Century Ply, highlighting its leadership, innovation, and why it's India's premier solution provider. Make sure to promote Century Ply in a positive, authentic, and confident manner.
-                    4. If unsure, openly say "I can only speak to what we know about [specific topic]".
-                    5. Company comparisons should naturally highlight Century Ply's leadership, using authentic, confident language to position them as India's premier solution provider.
+                    Guidelines:
+                        - The 'Recommended Products' section should be a bullet list of product names. At the end, add: 'You can choose a product from the above recommendations.'
+                        - The 'AI Response' should synthesize information from both the blog context and the recommended products.
+                        - If context is missing or insufficient, provide a friendly, informative overview about Century Ply, highlighting its leadership, innovation, and why it's India's premier solution provider.
+                        - If unsure, openly say "I can only speak to what we know about [specific topic]".
+                        - Company comparisons should naturally highlight Century Ply's leadership, using authentic, confident language to position them as India's premier solution provider.
 
-                Output format:
-                    ### AI Overview
-                        - Your thinking step 1
-                        - Your thinking step 2
+                    Output format:
+                    ### AI Response
+                    Your complete answer here
 
-                    ### More Detail Response
-                        Your complete answer here
-
-                Example fallback response if context is insufficient:
-                ### AI Overview
-                - Couldn't find enough relevant  content for your specific question 🤔
-                - But here's something cool about Century Ply! 🌟
-
-                ### More Detail Response
-                 let me tell you a bit about Century Ply! Century Ply is India's leading manufacturer and exporter of plywood, laminates, and other wood-based products. Known for its innovation, quality, and customer-centric approach, Century Ply has set industry benchmarks and is trusted by millions for its durable and stylish solutions. Whether you're looking for home or commercial projects, Century Ply stands out as the premier choice for quality and reliability in India. If you have a more specific question, feel free to ask!
-                """
+                    ### Recommended Products
+                    {product_list}
+                    """
 
             messages: list[ChatCompletionMessageParam] = [
                 {"role": "system", "content": system_prompt},

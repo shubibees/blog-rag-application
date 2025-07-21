@@ -25,7 +25,7 @@ async def generate_ai_streaming_response(
     vector_string = f"[{','.join(map(str, query_embedding))}]"
     context = await perform_blogs_similarity_search(db, vector_string, 5)
     return StreamingResponse(
-        StreamController.openai_stream(query_data.query, context),
+        StreamController.openai_stream(query_data.query, context, db),
         media_type="text/markdown",
         headers={
             "Cache-Control": "no-cache",
