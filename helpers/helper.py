@@ -20,7 +20,6 @@ async def preprocess_query_with_openai(query: str) -> dict:
         temperature=0,
         max_tokens=256
     )
-    import json
     content = completion.choices[0].message.content
     try:
         return json.loads(content)
