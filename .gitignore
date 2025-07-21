@@ -5,3 +5,6 @@
 __pycache__
 
 pgvector
+
+nohup.out
+output.log
