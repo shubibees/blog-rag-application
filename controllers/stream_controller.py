@@ -17,13 +17,12 @@ class StreamController:
         return response.data[0].embedding
 
     @staticmethod
-    async def openai_stream(query: str, context, db):
+    async def openai_stream(query: str, context, recommended_products):
         try:
             client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             model_name = os.getenv("OPENAI_MODEL_NAME", "gpt-4.1-nano-2025-04-14")
             print("similarity", context[0].similarity)
             # Get product recommendations
-            recommended_products = await SearchController.find_similar_product(query, db)
             if recommended_products:
                 product_list = "\n".join([
                     f"- {p.name}" for p in recommended_products
