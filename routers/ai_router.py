@@ -43,10 +43,10 @@ async def generate_related_question(
     related_questions = await SearchController.generate_related_question(request.question, request.context)
     return RelatedQuestionResponse(related_questions=related_questions)
 
-@ai_router.post("/blog/recommend-product-blog", response_model=RecommendProductBlogResponse)
-async def recommend_product_blog(
+@ai_router.post("/blog/recommend-similar-products-and-blogs", response_model=RecommendProductBlogResponse)
+async def recommend_similar_products_and_blogs(
     request: RecommendProductBlogRequest,
     db: asyncpg.Connection = Depends(get_db)
 ):
-    result = await SearchController.recommend_product_blog(request.query, request.context, db)
+    result = await SearchController.recommend_similar_products_and_blogs(request.query, db)
     return RecommendProductBlogResponse(**result) 

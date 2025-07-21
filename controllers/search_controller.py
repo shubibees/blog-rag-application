@@ -126,8 +126,8 @@ class SearchController:
         try:
             client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             system_prompt = (
-                "You are an AI assistant. Given a user's question, generate a list of 5 highly relevant, natural-sounding follow-up or related questions that would help deepen the conversation or clarify the topic. "
-                "Do not answer the original question, just return a numbered or bulleted list of 5 related questions."
+                "You are an AI assistant. Given a user's question, generate a list of 5 highly relevant, natural-sounding follow-up or related questions that are specifically about the recommended product(s), their color, or their category. "
+                "Each question should be concise (no more than 10 words) and focused on the product, its color, or its category. Do not answer the original question, just return a numbered or bulleted list of 5 short questions."
             )
             user_content = f"Original question: {question}"
             if context:
@@ -152,52 +152,13 @@ class SearchController:
             raise HTTPException(status_code=500, detail=str(e))
 
     @staticmethod
-    async def recommend_product_blog(query: str, context: str, db) -> dict:
+    async def recommend_similar_products_and_blogs(query: str, db) -> dict:
         try:
-            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-            # Static product listing
-            static_product_list = (
-            "Here are the available product categories and their typical applications:\n\n"
-            "**Plywood** (used for structural strength, waterproofing, and furniture): given below are the products\n"
-            "- Architect Ply: premium strength, ideal for interiors.\n"
-            "- Bond 710 / Sainik 710: waterproof, suitable for kitchen, bathroom.\n"
-            "- Win MR / Sainik MR: moisture-resistant, ideal for indoor furniture.\n"
-            "- Century Film Face: construction formwork.\n"
-            "- Classic Marine: strong marine-grade, moisture heavy areas.\n"
-            "\n"
-            "**Doors** (used for entryways and room partitions): given below are the products\n"
-            "- Club Prime Doors, Bond Doors, Sainik Doors: engineered wooden doors.\n"
-            "- Melamine Door Skin, White Primered Door: pre-finished or paint-ready.\n"
-            "- Laminated / Veneered Doors: decorative surface finishes.\n"
-            "\n"
-            "**Laminates** (used for surface finishes on furniture, wardrobes, etc.): given below are the products\n"
-            "- Classy Wine, Smoke Green, Emerald Green: decorative color laminates.\n"
-            "- Frosty White, Silica Grey: neutral tones for modern interior.\n"
-            "- Black, Mudpie: bold and earthy shades.\n"
-            "- Brazilian Sand, Pebble Ivory: natural stone and wood patterns.\n"
-            )
-            system_prompt = (
-            "You are a professional product recommender.\n"
-            "Given the user's context, you must first determine whether they are referring to **plywood, doors, or laminates**, "
-            "and then recommend **at least 2 relevant products** from the appropriate category.\n"
-            "If the user's use-case is unclear, infer from common construction/interior use cases.\n"
-            "Output only a comma-separated list of product names (no explanation).\n\n"
-            f"{static_product_list}"
-            )
-            user_prompt = f"Context: {context}"
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ]
-            completion = client.chat.completions.create(
-                model=os.getenv("CHAT_COMPLETION_MODEL", "gpt-4.1-nano-2025-04-14"),
-                messages=messages,  # type: ignore
-                temperature=0.7,
-                max_tokens=256
-            )
-            response_content = completion.choices[0].message.content or ""
-            recommended_products = [p.strip() for p in response_content.split(",") if p.strip()]
+            # Find similar products using the new method
+            similar_products = await SearchController.find_similar_product(query, db)
+            recommended_products = [p.name for p in similar_products]
 
+            # Find similar blogs (context)
             query_embedding = await SearchController.generate_embedding(query)
             vector_string = f"[{','.join(map(str, query_embedding))}]"
             blog_content = await perform_blogs_similarity_search(db, vector_string, 3)
@@ -206,12 +167,12 @@ class SearchController:
                 for c in blog_content
             ]
             response_data = {
-                    "recommended_products": recommended_products,
-                    "blog_content": blog_content
+                "recommended_products": recommended_products,
+                "blog_content": blog_content
             }
             return response_data
         except Exception as e:
-            print(f"Error in recommend_product: {e}")
+            print(f"Error in recommend_similar_products_and_blogs: {e}")
             raise HTTPException(status_code=500, detail=str(e))
 
 
