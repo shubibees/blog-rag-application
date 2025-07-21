@@ -69,7 +69,7 @@ class RelatedQuestionResponse(BaseModel):
 
 class RecommendProductBlogRequest(BaseModel):
     query: str = Field(..., min_length=3)
-    context: str = Field(..., min_length=3)
+    # context: str = Field(..., min_length=3)
 
 class RecommendProductBlogResponse(BaseModel):
     recommended_products: list[str]
