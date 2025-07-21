@@ -23,7 +23,8 @@ async def generate_ai_streaming_response(
 ):
     query_embedding = await StreamController.generate_embedding(query_data.query)
     vector_string = f"[{','.join(map(str, query_embedding))}]"
-    context = await perform_blogs_similarity_search(db, vector_string, 5)
+    context = await perform_blogs_similarity_search(db, vector_string, 2)
+    print("context",context)
     recommended_products = await SearchController.find_similar_product(query_data.query, db)
     return StreamingResponse(
         StreamController.openai_stream(query_data.query, context, recommended_products),
