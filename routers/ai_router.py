@@ -22,7 +22,7 @@ async def generate_ai_streaming_response(
     db: asyncpg.Connection = Depends(get_db)
 ):
     preprocessed_query = await preprocess_query_with_openai(query_data.query)
-    expanded_query = "color: " + preprocessed_query["color"] + " category: " + preprocessed_query["category"] + " " + preprocessed_query["expanded_query"]
+    expanded_query = preprocessed_query
     query_embedding = await StreamController.generate_embedding(expanded_query)
     vector_string = f"[{','.join(map(str, query_embedding))}]"
     context = await perform_blogs_similarity_search(db, vector_string, 2)
@@ -50,6 +50,6 @@ async def recommend_similar_products_and_blogs(
     db: asyncpg.Connection = Depends(get_db)
 ):
     preprocessed_query = await preprocess_query_with_openai(request.query)
-    expanded_query = "color: " + preprocessed_query["color"] + " category: " + preprocessed_query["category"] + " " + preprocessed_query["expanded_query"]
+    expanded_query = preprocessed_query
     result = await SearchController.recommend_similar_products_and_blogs(expanded_query, db)
     return RecommendProductBlogResponse(**result) 

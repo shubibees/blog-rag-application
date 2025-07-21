@@ -1,13 +1,15 @@
 from openai import OpenAI
 import os
 import json
+import re
 
-async def preprocess_query_with_openai(query: str) -> dict:
+async def preprocess_query_with_openai(query: str) -> str:
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     prompt = (
-        "Given the following user query, extract the color (if any) and the product category (if any). "
-        "If the query is ambiguous, try to make it more descriptive for a product search. "
-        "Return a JSON object with keys: 'color', 'category', and 'expanded_query'.\n\n"
+        "Given the following user query, extract the color (if any) and the product category like laminate ,sanik laminate ,doors,new age prodcut ,centruyexteria .. (if any). "
+        "Emphasize and clearly state the color and category in your response. "
+        "If the query is ambiguous, briefly clarify or expand it for a product search. "
+        "Always include lines like: color: \"<color>\" and category: \"<category>\" in your response, but you may include other helpful text as well.\n\n"
         f"User query: \"{query}\""
     )
     messages = [
@@ -20,9 +22,6 @@ async def preprocess_query_with_openai(query: str) -> dict:
         temperature=0,
         max_tokens=256
     )
-    content = completion.choices[0].message.content
-    try:
-        return json.loads(content)
-    except Exception:
-        # fallback: just return the original query
-        return {"color": None, "category": None, "expanded_query": query}
+    content = completion.choices[0].message.content.strip()
+    # Extract color and category from anywhere in the response
+    return content 
