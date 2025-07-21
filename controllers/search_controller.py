@@ -1,9 +1,10 @@
 
 from database.queries import perform_blogs_similarity_search,perform_product_similarity_search
 from models.search import Context, ResponseData, BlogContent, ProductSimilarityResult
+from helpers.helper import preprocess_query_with_openai
 from typing import List, cast, Optional
 import os
-
+import json
 from fastapi import HTTPException
 from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionUserMessageParam, ChatCompletionSystemMessageParam
@@ -20,6 +21,7 @@ INSUFFICIENT_CONTEXT_RESPONSE = ResponseData(
 
 
 class SearchController:
+
     @staticmethod
     async def generate_embedding(query: str) -> List[float]:
         client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
