@@ -96,6 +96,7 @@ async def perform_product_similarity_search(
         WHERE embedding <=> $1::vector < $2
         ORDER BY similarity ASC
     """, vector_string, max_similarity)
+    print("rows",rows)
     return [
         ProductSimilarityResult(
             documentid=row['documentid'],
