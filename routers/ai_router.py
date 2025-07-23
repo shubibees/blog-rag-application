@@ -50,6 +50,9 @@ async def recommend_similar_products_and_blogs(
     db: asyncpg.Connection = Depends(get_db)
 ):
     preprocessed_query = await preprocess_query_with_openai(request.query)
-    expanded_query = preprocessed_query
-    result = await SearchController.recommend_similar_products_and_blogs(expanded_query, db)
+    color = preprocessed_query.color
+    color_hex = preprocessed_query.color_hex
+    category = preprocessed_query.category
+    # Use preprocessed_query or pass color/category as needed
+    result = await SearchController.recommend_similar_products_and_blogs(request.query,category,color, db)
     return RecommendProductBlogResponse(**result) 

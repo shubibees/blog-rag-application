@@ -32,12 +32,12 @@ class SearchController:
         return response.data[0].embedding
 
     @staticmethod
-    async def find_similar_product(query: str, db) -> List[ProductSimilarityResult]:
+    async def find_similar_product(query: str,category:str,color:str, db) -> List[ProductSimilarityResult]:
         try:
             client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             query_embedding = await SearchController.generate_embedding(query)
             vector_string = f"[{','.join(map(str, query_embedding))}]"
-            return await perform_product_similarity_search(db, vector_string, 0.50) # similarity score 0.55 is the threshold for similarity
+            return await perform_product_similarity_search(db, vector_string,category, 0.50) # similarity score 0.55 is the threshold for similarity
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
@@ -154,10 +154,10 @@ class SearchController:
             raise HTTPException(status_code=500, detail=str(e))
 
     @staticmethod
-    async def recommend_similar_products_and_blogs(query: str, db) -> dict:
+    async def recommend_similar_products_and_blogs(query: str,category:str,color:str, db) -> dict:
         try:
             # Find similar products using the new method
-            similar_products = await SearchController.find_similar_product(query, db)
+            similar_products = await SearchController.find_similar_product(query,category,color, db)
             recommended_products = [p.name for p in similar_products]
 
             # Find similar blogs (context)

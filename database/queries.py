@@ -88,16 +88,27 @@ async def get_all_products(conn: asyncpg.Connection) -> List[Product]:
 async def perform_product_similarity_search(
     conn: asyncpg.Connection, 
     vector_string: str, 
-    max_similarity: float = 0.33
+    category: str,
+    max_similarity: float = 0.50
 ) -> list[ProductSimilarityResult]:
+    category_pattern = f"%{category}%"
     rows = await conn.fetch("""
+        SELECT pe.documentid, pe.name, pe.alias, pe.embedding <=> $1::vector AS similarity
+        FROM product_embedding_oai_small pe
+        JOIN products p ON pe.documentid = p.document_id
+        JOIN product_categories_products_lnk pcpl ON p.id = pcpl.product_id
+        JOIN product_categories pc ON pcpl.product_category_id = pc.id
+        WHERE pc.name ILIKE $2 AND pc.published_at IS NOT NULL
+        ORDER BY similarity ASC
+        LIMIT 4 
+    """, vector_string, category_pattern)
+    if len(rows) == 0:
+        rows = await conn.fetch("""
         SELECT documentid, name, alias, embedding <=> $1::vector AS similarity
         FROM product_embedding_oai_small
-        WHERE embedding <=> $1::vector < $2
         ORDER BY similarity ASC
-        LIMIT 5
-    """, vector_string, max_similarity)
-    print("rows", rows)
+        LIMIT 4
+        """, vector_string)
     return [
         ProductSimilarityResult(
             documentid=row['documentid'],
