@@ -1,10 +1,124 @@
 from typing import List
-
+import json
 import asyncpg
-from models.search import Context
+from models.search import Context, Blog, Product, ProductSimilarityResult
 
 
-async def perform_similarity_search(conn: asyncpg.Connection, vector_string: str, limit: int) -> List[Context]:
+
+
+
+async def get_all_blogs(conn: asyncpg.Connection) -> List[Blog]:
+    rows = await conn.fetch("SELECT * FROM blogs where published_at is not null")
+    return [
+        Blog(
+            documentid=row['document_id'],
+            blog_author=row['blog_author'],
+            title=row['title'],
+            content=row['content']
+        ) for row in rows
+    ]
+
+
+async def get_all_products(conn: asyncpg.Connection) -> List[Product]:
+    rows = await conn.fetch("""SELECT
+        p.id,
+        p.document_id,
+        p.name,
+        p.short_description,
+        p.description,
+        p.alias,
+        p.model_code,
+        p.specs,
+        COALESCE(
+            JSON_AGG(DISTINCT pc.color) FILTER (WHERE pc.color IS NOT NULL),
+            '[]'
+        ) AS colors,
+        COALESCE(
+            JSON_AGG(
+                DISTINCT jsonb_build_object(
+                    'id', cat.id,
+                    'name', cat.name
+                )
+            ) FILTER (WHERE cat.id IS NOT NULL),
+            '[]'
+        ) AS categories
+    FROM
+        products p
+    LEFT JOIN
+        products_colors_lnk pcl
+    ON
+        p.id = pcl.product_id
+    LEFT JOIN
+        product_colors pc
+    ON
+        pcl.product_color_id = pc.id
+    LEFT JOIN
+        product_categories_products_lnk pcpl
+    ON
+        p.id = pcpl.product_id
+    LEFT JOIN
+        product_categories cat
+    ON
+        pcpl.product_category_id = cat.id
+    WHERE
+        p.published_at IS NOT NULL
+    GROUP BY
+        p.id
+    ORDER BY
+        p.id ASC""")
+    products = []
+    for row in rows:
+        # Parse colors and categories from JSON string to Python list
+        colors = json.loads(row['colors']) if isinstance(row['colors'], str) else row['colors']
+        categories = json.loads(row['categories']) if isinstance(row['categories'], str) else row['categories']
+        products.append(Product(
+            documentid=row['document_id'],
+            name=row['name'],
+            short_description=row['short_description'],
+            description=row['description'],
+            alias=row['alias'],
+            model_code=row['model_code'],
+            specs=row['specs'],
+            colors=colors,
+            categories=categories
+        ))
+    return products
+
+
+async def perform_product_similarity_search(
+    conn: asyncpg.Connection, 
+    vector_string: str, 
+    category: str,
+    max_similarity: float = 0.50
+) -> list[ProductSimilarityResult]:
+    category_pattern = f"%{category}%"
+    rows = await conn.fetch("""
+        SELECT pe.documentid, pe.name, pe.alias, pe.embedding <=> $1::vector AS similarity
+        FROM product_embedding_oai_small pe
+        JOIN products p ON pe.documentid = p.document_id
+        JOIN product_categories_products_lnk pcpl ON p.id = pcpl.product_id
+        JOIN product_categories pc ON pcpl.product_category_id = pc.id
+        WHERE pc.name ILIKE $2 AND pc.published_at IS NOT NULL
+        ORDER BY similarity ASC
+        LIMIT 4 
+    """, vector_string, category_pattern)
+    if len(rows) == 0:
+        rows = await conn.fetch("""
+        SELECT documentid, name, alias, embedding <=> $1::vector AS similarity
+        FROM product_embedding_oai_small
+        ORDER BY similarity ASC
+        LIMIT 4
+        """, vector_string)
+    return [
+        ProductSimilarityResult(
+            documentid=row['documentid'],
+            name=row['name'] if row['name'] else "",
+            alias=row['alias'] if row['alias'] else "",
+            similarity=row['similarity']
+        ) for row in rows
+    ]
+
+async def perform_blogs_similarity_search(conn: asyncpg.Connection, vector_string: str, limit: int) -> List[Context]:
     rows = await conn.fetch("""
         SELECT documentid, content, embedding <=> $1::vector AS similarity
         FROM blog_embedding_oai_small

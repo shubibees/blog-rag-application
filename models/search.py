@@ -6,6 +6,30 @@ class Query(BaseModel):
     query: str = Field(..., min_length=3)
 
 
+class EmbeddingsResponse(BaseModel):
+    embedding_status: str
+
+class Blog(BaseModel):
+    documentid: str
+    blog_author:Optional[str] = ""
+    title: Optional[str] = ""
+    content: Optional[str] = ""
+
+class Category(BaseModel):
+    id: int
+    name: str
+
+class Product(BaseModel):
+    documentid: str
+    name: str
+    short_description: Optional[str] = ""
+    description: Optional[str] = ""
+    alias: Optional[str] = ""
+    model_code: Optional[str] = ""
+    specs: Optional[str] = ""
+    colors: List[str]
+    categories: List[Category]
+
 class Context(BaseModel):
     documentid: str
     content: str
@@ -45,9 +69,18 @@ class RelatedQuestionResponse(BaseModel):
 
 class RecommendProductBlogRequest(BaseModel):
     query: str = Field(..., min_length=3)
-    context: str = Field(..., min_length=3)
+    # context: str = Field(..., min_length=3)
 
 class RecommendProductBlogResponse(BaseModel):
     recommended_products: list[str]
     blog_content: List[BlogContent]
+
+
+class ProductSimilarityResult(BaseModel):
+    documentid: str
+    name: str=""
+    alias: str=""
+    similarity: float
+
+
 
